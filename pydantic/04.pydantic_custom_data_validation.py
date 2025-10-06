@@ -7,7 +7,7 @@ class Patient(BaseModel):
     linkedin_url: AnyUrl
     age: int = Field(gt=0, lt=120) #custom data validation
     weight: float = Field(gt=0) #custom data validation
-    allergies: Optional[List[str]] = Field(max_length=5) #custom data validation
+    allergies: Optional[List[str]] #custom data validation
  
 
 def insert_patient_data(patient: Patient):
