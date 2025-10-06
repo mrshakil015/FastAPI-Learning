@@ -7,7 +7,7 @@ class Patient(BaseModel):
     married: Annotated[bool, Field(description='Is the patient married or not')]=False
     linkedin_url: AnyUrl
     age: int = Field(gt=0, lt=120)
-    weight: Annotated[float, Field(gt=0)]
+    weight: Annotated[float, Field(gt=0, strict=True)]
     allergies: Optional[List[str]]
  
 
