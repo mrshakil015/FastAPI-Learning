@@ -345,3 +345,118 @@ patient_info = {
 patient1 = Patient(**patient_info)
 insert_patient_data(patient1)
 ```
+
+### @computed_field
+
+```python
+from pydantic import BaseModel, EmailStr, computed_field
+from typing import List, Dict, Optional
+
+class Patient(BaseModel):
+    name: str
+    email: EmailStr
+    age: int
+    weight:float #kg
+    height: float #mtr
+    married: bool
+    allergies: Optional[List[str]]
+    contact_details: Dict[str, str]
+    
+    @computed_field
+    @property
+    def bmi(self) -> float:
+        # bmi = weight / (height*height)
+        bmi = round(self.weight / (self.height**2),2)
+        return bmi
+
+def insert_patient_data(patient: Patient):
+    print(patient.name)
+    print(patient.age)
+    print('BMI: ', patient.bmi)
+    print("inserted data")
+
+patient_info = {
+    "name": "Md. Shakil",
+    "email": "abc@hdfc.com",
+    "age": 67,
+    "weight": 70.5,
+    "height": 1.72,
+    "married": True,
+    "allergies": ["Dust", "Peanuts"],
+    "contact_details": {
+        "phone": "+8801712345678",
+        "emergency": "+12345678",
+        "address": "House 12, Road 5, Dhanmondi, Dhaka"
+    }
+
+}
+
+patient1 = Patient(**patient_info)
+insert_patient_data(patient1)
+```
+
+### Nested Model
+
+```python
+from pydantic import BaseModel
+
+class Address(BaseModel):
+    city: str
+    state: str
+    zip_code: str
+
+class Patient(BaseModel):
+    name: str
+    gender: str
+    age: int
+    address: Address
+    
+address_dict = {'city': 'Savar', 'state':'Dhaka', 'zip_code': '1340'}
+address1 = Address(**address_dict)
+
+patient_dict = {'name': 'Shakil', 'gender': 'Male', 'age': 26, 'address': address1}
+patient1 = Patient(**patient_dict)
+
+print(patient1)
+print(patient1.name)
+print(patient1.address.city)
+```
+
+### Apply Serialization
+
+```python
+from pydantic import BaseModel
+
+class Address(BaseModel):
+    city: str
+    state: str
+    zip_code: str
+
+class Patient(BaseModel):
+    name: str
+    gender: str
+    age: int
+    address: Address
+    
+address_dict = {'city': 'Savar', 'state':'Dhaka', 'zip_code': '1340'}
+address1 = Address(**address_dict)
+
+patient_dict = {'name': 'Shakil', 'gender': 'Male', 'age': 26, 'address': address1}
+patient1 = Patient(**patient_dict)
+
+convert_dict = patient1.model_dump() #convert model object to python dictionary
+print(convert_dict)
+print(type(convert_dict))
+
+convert_json = patient1.model_dump_json() #convert model object to json
+print(convert_json)
+print(type(convert_json))
+
+#Export specific field
+convert_included_data = patient1.model_dump(include=['name', 'gender'])
+print(convert_included_data)
+
+convert_exclude_data = patient1.model_dump(exclude=['name', 'gender'])
+print(convert_exclude_data)
+
+```
