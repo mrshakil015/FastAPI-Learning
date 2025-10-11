@@ -1,8 +1,16 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field, computed_field
 from typing import Literal, Annotated
 import pickle
 import pandas as pd
+
+# import the ml model
+with open('model.pkl', 'rb') as f:
+    model = pickle.load(f)
+
+app = FastAPI()
+
 
 tier_1_cities = ["Mumbai", "Delhi", "Bangalore", "Chennai", "Kolkata", "Hyderabad", "Pune"]
 tier_2_cities = [
@@ -14,12 +22,6 @@ tier_2_cities = [
     "Kolhapur", "Bilaspur", "Jalandhar", "Noida", "Guntur", "Asansol", "Siliguri"
 ]
 
-#import the ml model
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
-
-app = FastAPI()
-
 # pydantic model to validate incoming data
 class UserInput(BaseModel):
     
@@ -27,7 +29,7 @@ class UserInput(BaseModel):
     weight : Annotated[float, Field(..., gt=0, description='Weight of the user')]
     height : Annotated[float, Field(..., gt=0, lt=2.5,  description='Height of the user')]
     income_lpa : Annotated[float, Field(..., gt=0, description='Annual salary of the user in lpa')]
-    somker : Annotated[bool, Field(..., description='Is user a smoker')]
+    smoker : Annotated[bool, Field(..., description='Is user a smoker')]
     city: Annotated[str, Field(...,  description='The city that the user belongs to')]
     occupation : Annotated[Literal['retired', 'freelancer', 'student', 'government_job',
        'business_owner', 'unemployed', 'private_job'], Field(..., description='Occupation of the user')]
@@ -67,5 +69,21 @@ class UserInput(BaseModel):
             return 2
         else:
             return 3
+
+@app.post('/predict')
+def predict_premium(data: UserInput):
     
+    input_df = pd.DataFrame([{
+        'bmi': data.bmi,
+        'age_group' : data.age_group,
+        'lifestyle_risk' : data.lifestyle_risk,
+        'city_tier' : data.city_tier,
+        'income_lpa' : data.income_lpa,
+        'occupation' : data.occupation
+    }])
+    
+    prediction = model.predict(input_df)[0]
+    
+    return JSONResponse(status_code=200, content={'predicted_category': prediction})
+
     
